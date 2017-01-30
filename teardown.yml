@@ -1,0 +1,36 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/aws.yml
+    - vars/aws_secrets.yml
+  tasks:
+    - name: get admin's public ip address
+      ipify_facts:
+    - name: Ensure cloudformation is up
+      cloudformation:
+        stack_name: "{{ stack_name }}"
+        state: present
+        region: "{{ aws_region }}"
+        template: templates/ec2_cloudformation_template.json
+        template_parameters:
+          InstanceType: t2.micro
+          KeyName: "{{ key_name }}"
+          Name: "{{ stack_name }}"
+          SSHLocation: "{{ ipify_public_ip }}/32"
+      register: cloudformation
+    - name: "Remove {{ stack_name }}.{{ zone }}"
+      route53:
+        profile: "{{ aws_dns_profile }}"
+        command: delete
+        overwrite: true
+        zone: "{{ zone }}"
+        record: "{{ stack_name }}.{{ zone }}"
+        type: A
+        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+    - name: Destroy cloudformation to create ec2, security group, and EIP.
+      cloudformation:
+        stack_name: "{{ stack_name }}"
+        state: absent
+        region: "{{ aws_region }}"

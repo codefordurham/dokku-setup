@@ -1,0 +1,12 @@
+---
+aws_region: us-east-1
+# name of your AWS cloudformation resources:
+stack_name: codefordurham3
+# name of your EC2 Key Pair:
+key_name: codefordurham
+# DNS zone apps will be hosted under (that you have setup in Route53):
+zone: a.willowdesk.info
+# Location of your EC2 Key Pair:
+ssh_private_key: ~/.ec2/codefordurham.pem
+# The AWS profile where Route53 DNS is controlled (if a different account):
+aws_dns_profile: default
