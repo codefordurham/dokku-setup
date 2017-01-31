@@ -2,17 +2,17 @@ Summary
 =======
 
 An [ansible](http://ansible.com) playbook to setup a
-[rancheros](http://rancher.com) a simple PAAS web system on AWS.
+[rancheros](http://rancher.com) as a simple PAAS on AWS.
 
-The script will setup a micro ec2 instance, security group settings, a public IP
+The script will setup a t2.micro ec2 instance, security group settings, a public IP
 address, and configure [nginx-proxy](https://github.com/jwilder/nginx-proxy) and
 [nginx-route53](https://github.com/hmalphettes/docker-route53-dyndns) docker
 instances. The default settings for this script will fall under the
 free tier, if your AWS account is eligible for them.
 
-Once setup you can configure a setting for docker-machine, and deploy to the
-server. The following environmental variables can be used to configure DNS and
-nginx-proxy (see nginx-proxy and nginx-route53 for more information):
+Once setup you can deploy with docker to the server, and get a DNS entry
+configured for your app, that sits behind the nginx-proxy. The following
+environmental variables can be used to configure DNS and nginx-proxy:
 
  * VIRTUAL_HOST: (required). The full DNS name that your docker instance should
    resolve to.
@@ -22,8 +22,8 @@ nginx-proxy (see nginx-proxy and nginx-route53 for more information):
 Example Deployment
 ------------------
 
-Run the ansible script, and setup docker-machine to point to the new EC2
-instance:
+Run the setup.yml ansible script and setup docker-machine to point to the new
+EC2 instance:
 
 ```
 ansible-playbook -i ec2.py setup.yml
@@ -36,8 +36,8 @@ docker-machine create ...
 ```
 
 Once your new PAAS system is setup you can connect to it, and run docker
-instances. If your IP address is the admin address only (rerun the idempotent
-setup.yml script if your IP has changed):
+instances (rerun the idempotent setup.yml script if your IP has changed to
+access the docker ports, which are restricted to your IP):
 
 ```
 eval "$(docker-machine env codefordurham)"
@@ -92,6 +92,6 @@ ansible-playbook -i ec2.py teardown.yml
 docker-machine rm ...
 ```
 
-Note that this will not remove and DNS entries created by any applications you
+Note that this will not remove any DNS entries created by applications you
 deployed (apart from the one created for the EC2 server itself). You will need
 to manually remove those from Route53.
