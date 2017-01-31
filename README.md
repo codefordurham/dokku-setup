@@ -49,7 +49,9 @@ docker run -e VIRTUAL_HOST=whoami.a.willowdesk.info jwilder/whomai
 curl -H "Host: whoami.local" whoami.a.willowdesk.info
 ```
 
-Needless to say, this works for docker-compose configurations as well.
+Needless to say, this works for docker-compose configurations as well. See
+[Using Compose in production](https://docs.docker.com/compose/production/) for
+more information on how one might set that up.
 
 Setup
 -----
