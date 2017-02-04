@@ -30,9 +30,8 @@
         record: "{{ stack_name }}.{{ zone }}"
         type: A
         value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
-
-- name: Configure new ec2 instance
-  hosts: "tag_aws_cloudformation_stack_name_{{ stack_name }}"
+- name: Configure ec2 instance
+  hosts: "{{ hostvars.localhost.cloudformation.stack_outputs.InstanceIPAddress }}"
   become: yes
   gather_facts: False
   vars_files:
@@ -52,6 +51,8 @@
   roles:
   - { role: swapfile, swapfile_size: 3GB, swapfile_swappiness: 10 }
   tasks:
+  - name: setup certs directory
+    file: path=/home/rancher/certs state=directory
   - docker_network:
       name: "{{ stack_name }}-proxy-layer"
   - docker_container:
@@ -61,10 +62,24 @@
       image: jwilder/nginx-proxy:latest
       ports:
       - "80:80"
+      - "443:443"
       networks:
       - name: "{{ stack_name }}-proxy-layer"
       volumes:
+      - /home/rancher/certs:/etc/nginx/certs:ro
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
+  - docker_container:
+      name: "{{ stack_name }}-letsencrypt"
+      state: started
+      restart_policy: always
+      image: jrcs/letsencrypt-nginx-proxy-companion
+      volumes_from:
+      - "{{ stack_name }}-proxy"
+      volumes:
+      - /home/rancher/certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
   - docker_container:
       name: route53
       state: started

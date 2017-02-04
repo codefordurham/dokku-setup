@@ -4,20 +4,26 @@ Summary
 An [ansible](http://ansible.com) playbook to setup a
 [rancheros](http://rancher.com) as a simple PAAS on AWS.
 
-The script will setup a t2.micro ec2 instance, security group settings, a public IP
-address, and configure [nginx-proxy](https://github.com/jwilder/nginx-proxy) and
-[nginx-route53](https://github.com/hmalphettes/docker-route53-dyndns) docker
-instances. The default settings for this script will fall under the
-free tier, if your AWS account is eligible for them.
+The script will setup a t2.micro ec2 instance, security group settings, a public
+IP address. An [nginx-proxy](https://github.com/jwilder/nginx-proxy),
+[nginx-route53](https://github.com/hmalphettes/docker-route53-dyndns), and
+[letsencrypt-nginx-proxy-companion](https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion)
+instance are setup to serve HTTP and HTTPS traffic. The default settings for
+this script will fall under the free tier, if your AWS account is eligible for
+them.
 
-Once setup you can deploy with docker to the server, and get a DNS entry
-configured for your app, that sits behind the nginx-proxy. The following
-environmental variables can be used to configure DNS and nginx-proxy:
+You can deploy with docker to the server, and get a DNS entry configured for
+your app, that sits behind the nginx-proxy. The following environmental
+variables can be used to configure DNS and nginx-proxy:
 
- * VIRTUAL_HOST: (required). The full DNS name that your docker instance should
+ * VIRTUAL_HOST: The full DNS name that your docker instance should
    resolve to.
- * ZONE: (optional). If your DNS zone is not the domain (ie, at.example.com
+ * ZONE: (optional) If your DNS zone is not the domain (ie, at.example.com
    rather than example.com), then you must specify the zone.
+ * LETSENCRYPT_HOST: (optional) To serve HTTPS traffic you must supply this
+   variable (probably set to the same value as VIRTUAL_HOST).
+ * LETSENCRYPT_EMAIL: (optional) To serve HTTPS traffic you must supply this
+   variable.
 
 Example Deployment
 ------------------
@@ -51,7 +57,8 @@ curl -H "Host: whoami.local" whoami.a.willowdesk.info
 
 Needless to say, this works for docker-compose configurations as well. See
 [Using Compose in production](https://docs.docker.com/compose/production/) for
-more information on how one might set that up.
+more information on how one might set that up. Examples:
+ * [citygram-connector](https://github.com/dsummersl/citygram-connector/tree/docker#deployment)
 
 Setup
 -----
