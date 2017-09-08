@@ -20,7 +20,7 @@
           Name: "{{ stack_name }}"
           SSHLocation: "{{ ipify_public_ip }}/32"
       register: cloudformation
-    - name: "Remove {{ stack_name }}.{{ zone }}"
+    - name: "Remove {{ stack_name }} stack"
       route53:
         profile: "{{ aws_dns_profile }}"
         command: delete
