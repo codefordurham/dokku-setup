@@ -1,4 +1,3 @@
 ---
-- src: noqcks.s3-website
 - src: https://github.com/Oefenweb/ansible-swapfile
   name: swapfile

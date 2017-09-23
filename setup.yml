@@ -9,19 +9,20 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
+    - name: generate cloudformation template.
+      shell: python make_cf_template.py > files/cf_template.json
     - name: Launch cloudformation to create ec2, security group, and EIP.
       cloudformation:
         stack_name: "{{ stack_name }}"
         state: present
         region: "{{ aws_region }}"
-        template: templates/ec2_cloudformation_template.json
+        template: files/cf_template.json
         template_parameters:
-          InstanceType: t2.micro
           KeyName: "{{ key_name }}"
           Name: "{{ stack_name }}"
           SSHLocation: "{{ ipify_public_ip }}/32"
       register: cloudformation
-    - name: "Setup {{ stack_name }}.{{ zone }}"
+    - name: "Setup route53 {{ stack_name }}.{{ zone }}"
       route53:
         profile: "{{ aws_dns_profile }}"
         command: create
@@ -30,67 +31,59 @@
         record: "{{ stack_name }}.{{ zone }}"
         type: A
         value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+    - name: Add instance to in-memory host group
+      add_host:
+        hostname: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        groups: cloud_formation
+    - name: Wait for SSH
+      wait_for:
+        host: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        port: 22
+        delay: 5
+        timeout: 300
+        state: started
 - name: Configure ec2 instance
-  hosts: "{{ hostvars.localhost.cloudformation.stack_outputs.InstanceIPAddress }}"
+  hosts: cloud_formation
   become: yes
   gather_facts: False
   vars_files:
     - vars/aws.yml
     - vars/aws_secrets.yml
   vars:
-    ansible_user: rancher
+    ansible_user: ubuntu
     ansible_ssh_private_key_file: "{{ ssh_private_key }}"
     ansible_host_key_checking: false
   pre_tasks:
   # if there is no python, install it before using other ansible packages
   - name: install python
     raw: which python || (apt update && apt-get install -y python python-simplejson)
-  - apt: name=net-tools
-  - apt: name=python-pip
-  - pip: name=docker-py
   roles:
   - { role: swapfile, swapfile_size: 3GB, swapfile_swappiness: 10 }
   tasks:
-  - name: setup certs directory
-    file: path=/home/rancher/certs state=directory
-  - docker_network:
-      name: "{{ stack_name }}-proxy-layer"
-  - docker_container:
-      name: "{{ stack_name }}-proxy"
-      state: started
-      restart_policy: always
-      image: jwilder/nginx-proxy:latest
-      ports:
-      - "80:80"
-      - "443:443"
-      networks:
-      - name: "{{ stack_name }}-proxy-layer"
-      volumes:
-      - /home/rancher/certs:/etc/nginx/certs:ro
-      - /etc/nginx/vhost.d
-      - /usr/share/nginx/html
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-  - docker_container:
-      name: "{{ stack_name }}-letsencrypt"
-      state: started
-      restart_policy: always
-      image: jrcs/letsencrypt-nginx-proxy-companion
-      volumes_from:
-      - "{{ stack_name }}-proxy"
-      volumes:
-      - /home/rancher/certs:/etc/nginx/certs:rw
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-  - docker_container:
-      name: route53
-      state: started
-      restart_policy: always
-      image: zne17nct/route53-dyndns
-      env:
-        AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
-        AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
-      volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-  - debug:
-      msg:
-      - "To setup docker-machine to connect to your server, execute the following command:"
-      - "docker-machine create --driver generic --generic-ip-address {{ stack_name }}.{{ zone }} --generic-ssh-key {{ ssh_private_key }} --generic-ssh-user rancher {{ stack_name }}"
+  - name: Download Dokku
+    get_url:
+      url: https://raw.githubusercontent.com/dokku/dokku/v0.10.4/bootstrap.sh
+      dest: /tmp/bootstrap.sh
+      checksum: sha1:3408f0b8653dad736cfc038bab9889364d080767
+  - name: Add root .ssh directory
+    file:
+      path: /root/.ssh
+      owner: root
+      group: root
+      mode: 0644
+      state: directory
+  - name: Add Dokku key file
+    copy:
+      src: files/dokku.pub
+      dest: /root/.ssh/id_rsa.pub
+      owner: root
+      group: root
+      mode: 0644
+  - name: Install Dokku
+    shell: bash /tmp/bootstrap.sh | tee /tmp/bootstrap.log
+    args:
+      creates: /usr/bin/dokku
+    environment:
+      DOKKU_TAG: v0.10.4
+      DOKKU_VHOST_ENABLE: true
+      DOKKU_HOSTNAME: "{{ stack_name }}.{{ zone }}"
