@@ -3,6 +3,19 @@ Summary
 
 An [ansible](http://ansible.com) playbook to setup a dokku instance.
 
+Setup
+-----
+
+```
+mkvirtualenv -p `which python2` dokku-setup
+
+pip install -r requirements.txt
+ansible-galaxy install -r requirements.yml
+```
+
+NOTE: you will also need the vault password for some passwords stored in
+ansible. Ask another developer for it.
+
 Deployment
 ----------
 
@@ -10,7 +23,7 @@ Run the setup.yml ansible script and setup docker-machine to point to the new
 EC2 instance:
 
 ```
-ansible-playbook -i ec2.py setup.yml
+ansible-playbook -i ec2.py --vault-pass .vault_pass.txt setup.yml
 
 # If your AWS profile is not default, use:
 # AWS_PROFILE=YOURAWSPROFILE ansible-playbook -i ec2.py setup.yml
