@@ -8,12 +8,14 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
+    - name: generate cloudformation template.
+      shell: python make_cf_template.py > files/cf_template.json
     - name: Ensure cloudformation is up
       cloudformation:
         stack_name: "{{ stack_name }}"
         state: present
         region: "{{ aws_region }}"
-        template: templates/ec2_cloudformation_template.json
+        template: files/cf_template.json
         template_parameters:
           InstanceType: t2.micro
           KeyName: "{{ key_name }}"
