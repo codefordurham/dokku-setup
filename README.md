@@ -1,7 +1,8 @@
 Summary
 =======
 
-An [ansible](http://ansible.com) playbook to setup a dokku instance.
+An [ansible](http://ansible.com) playbook to maintain a dokku instance on AWS for
+[Code for Durham](http://codefordurham.com).
 
 Setup
 -----
@@ -23,10 +24,10 @@ Run the setup.yml ansible script and setup docker-machine to point to the new
 EC2 instance:
 
 ```
-ansible-playbook -i ec2.py --vault-pass .vault_pass.txt setup.yml
+ansible-playbook setup.yml
 
 # If your AWS profile is not default, use:
-# AWS_PROFILE=YOURAWSPROFILE ansible-playbook -i ec2.py setup.yml
+# AWS_PROFILE=YOURAWSPROFILE ansible-playbook setup.yml
 ```
 
 Setup
@@ -64,7 +65,7 @@ Teardown
 To remove all the resources execute the teardown script:
 
 ```
-ansible-playbook -i ec2.py teardown.yml
+ansible-playbook teardown.yml
 
 # remove the docker-machine setting:
 docker-machine rm ...

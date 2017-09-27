@@ -17,7 +17,6 @@
         region: "{{ aws_region }}"
         template: files/cf_template.json
         template_parameters:
-          InstanceType: t2.micro
           KeyName: "{{ key_name }}"
           Name: "{{ stack_name }}"
           SSHLocation: "{{ ipify_public_ip }}/32"
@@ -30,7 +29,7 @@
         zone: "{{ zone }}"
         record: "{{ stack_name }}.{{ zone }}"
         type: A
-        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        value: "{{ cloudformation.stack_outputs.PublicIP }}"
     - name: Destroy cloudformation to create ec2, security group, and EIP.
       cloudformation:
         stack_name: "{{ stack_name }}"

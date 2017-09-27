@@ -9,8 +9,10 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
-    - name: generate cloudformation template.
-      shell: python make_cf_template.py > files/cf_template.json
+    - name: fetch cloudformation template.
+      get_url:
+        url: https://s3.amazonaws.com/dokku-aws/dokku_stack.json
+        dest: files/cf_template.json
     - name: Launch cloudformation to create ec2, security group, and EIP.
       cloudformation:
         stack_name: "{{ stack_name }}"
@@ -18,9 +20,9 @@
         region: "{{ aws_region }}"
         template: files/cf_template.json
         template_parameters:
+          DokkuHostname: "{{ stack_name }}.{{ zone }}"
           KeyName: "{{ key_name }}"
-          Name: "{{ stack_name }}"
-          SSHLocation: "{{ ipify_public_ip }}/32"
+          SshCidr: "{{ ipify_public_ip }}/32"
       register: cloudformation
     - name: "Setup route53 {{ stack_name }}.{{ zone }}"
       route53:
@@ -30,14 +32,14 @@
         zone: "{{ zone }}"
         record: "{{ stack_name }}.{{ zone }}"
         type: A
-        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        value: "{{ cloudformation.stack_outputs.PublicIP }}"
     - name: Add instance to in-memory host group
       add_host:
-        hostname: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        hostname: "{{ cloudformation.stack_outputs.PublicIP }}"
         groups: cloud_formation
     - name: Wait for SSH
       wait_for:
-        host: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+        host: "{{ cloudformation.stack_outputs.PublicIP }}"
         port: 22
         delay: 5
         timeout: 300
@@ -55,35 +57,7 @@
     ansible_host_key_checking: false
   pre_tasks:
   # if there is no python, install it before using other ansible packages
-  - name: install python
-    raw: which python || (apt update && apt-get install -y python python-simplejson)
+  - name: setup python symlink for ansible
+    raw: which python || ln -s `which python3` /usr/bin/python
   roles:
   - { role: swapfile, swapfile_size: 3GB, swapfile_swappiness: 10 }
-  tasks:
-  - name: Download Dokku
-    get_url:
-      url: https://raw.githubusercontent.com/dokku/dokku/v0.10.4/bootstrap.sh
-      dest: /tmp/bootstrap.sh
-      checksum: sha1:3408f0b8653dad736cfc038bab9889364d080767
-  - name: Add root .ssh directory
-    file:
-      path: /root/.ssh
-      owner: root
-      group: root
-      mode: 0644
-      state: directory
-  - name: Add Dokku key file
-    copy:
-      src: files/dokku.pub
-      dest: /root/.ssh/id_rsa.pub
-      owner: root
-      group: root
-      mode: 0644
-  - name: Install Dokku
-    shell: bash /tmp/bootstrap.sh | tee /tmp/bootstrap.log
-    args:
-      creates: /usr/bin/dokku
-    environment:
-      DOKKU_TAG: v0.10.4
-      DOKKU_VHOST_ENABLE: true
-      DOKKU_HOSTNAME: "{{ stack_name }}.{{ zone }}"
