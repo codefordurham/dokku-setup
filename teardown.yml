@@ -8,8 +8,10 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
-    - name: generate cloudformation template.
-      shell: python make_cf_template.py > files/cf_template.json
+    - name: fetch cloudformation template.
+      get_url:
+        url: https://s3.amazonaws.com/dokku-aws/dokku_stack.json
+        dest: files/cf_template.json
     - name: Ensure cloudformation is up
       cloudformation:
         stack_name: "{{ stack_name }}"
@@ -17,9 +19,9 @@
         region: "{{ aws_region }}"
         template: files/cf_template.json
         template_parameters:
+          DokkuHostname: "{{ stack_name }}.{{ zone }}"
           KeyName: "{{ key_name }}"
-          Name: "{{ stack_name }}"
-          SSHLocation: "{{ ipify_public_ip }}/32"
+          SshCidr: "{{ ipify_public_ip }}/32"
       register: cloudformation
     - name: "Remove {{ stack_name }} stack"
       route53:
