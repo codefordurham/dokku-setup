@@ -33,6 +33,15 @@
         record: "{{ stack_name }}.{{ zone }}"
         type: A
         value: "{{ cloudformation.stack_outputs.PublicIP }}"
+    - name: Wildcard subdomains for stack
+      route53:
+        profile: "{{ aws_dns_profile }}"
+        command: create
+        overwrite: true
+        zone: "{{ zone }}"
+        record: "*.{{ stack_name }}.{{ zone }}"
+        type: A
+        value: "{{ cloudformation.stack_outputs.PublicIP }}"
     - name: Add instance to in-memory host group
       add_host:
         hostname: "{{ cloudformation.stack_outputs.PublicIP }}"
@@ -61,3 +70,8 @@
     raw: which python || ln -s `which python3` /usr/bin/python
   roles:
   - { role: swapfile, swapfile_size: 3GB, swapfile_swappiness: 10 }
+  tasks:
+  - name: Install Letsencrypt
+    shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+    args:
+      creates: /var/lib/dokku/plugins/enabled/letsencrypt
