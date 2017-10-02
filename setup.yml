@@ -69,7 +69,18 @@
   - name: setup python symlink for ansible
     raw: which python || ln -s `which python3` /usr/bin/python
   roles:
-  - { role: swapfile, swapfile_size: 3GB, swapfile_swappiness: 10 }
+  - role: swapfile
+    swapfile_size: 3GB
+    swapfile_swappiness: 10
+  - role: tequila-common
+    # TODO should make a PR to add this requirement for 'env_name' to the
+    # tequila docs.
+    env_name: no_env_set
+    project_name: dokku-stack
+    users:
+      - name: dsummers
+        public_keys:
+        - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbLiRabIT10uLxy0u8ENoieqoup+tErtlK3KHJi2GdhWKcF7MkAdO5icQ9SrsaCH8Yo7hjQKXM+01gzncWF4KII/d/B9x6i9mTHKl2zLgHxogbeXL5phL6FO5uegsCRNuYioqAu/qHticAavRw4OKBHgbTM75oivysUBY11p1T5EWjSJjqsVYdDXYKCORryhjnhPKcPqaWVNq/XsDCqnMpMsHf8S0cfCOxeYhVvc47H+xRn7na6g/bjNIxJZIOz7qTmcpDik4F1N3rvpIzPqQREdlSLPAXtnLF25mWZuf7f8RfR4ej6r7MzFaJE8LZ/b/nOMjh538NsAegcIpcehRp dsummers@pinedesk.biz"
   tasks:
   - name: Install Letsencrypt
     shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git

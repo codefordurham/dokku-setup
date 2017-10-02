@@ -1,3 +1,5 @@
 ---
 - src: https://github.com/Oefenweb/ansible-swapfile
   name: swapfile
+- src: https://github.com/caktus/tequila-common
+  version: v0.8.0
