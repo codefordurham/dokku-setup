@@ -61,7 +61,6 @@
     - vars/aws.yml
     - vars/aws_secrets.yml
   vars:
-    ansible_user: ubuntu
     ansible_ssh_private_key_file: "{{ ssh_private_key }}"
     ansible_host_key_checking: false
   pre_tasks:
@@ -86,3 +85,8 @@
     shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
     args:
       creates: /var/lib/dokku/plugins/enabled/letsencrypt
+  - name: Ensure dokku allows SSH access
+    user:
+      name: dokku
+      groups: login
+      append: true
