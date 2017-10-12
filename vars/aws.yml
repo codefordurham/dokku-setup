@@ -8,3 +8,8 @@ key_name: codefordurham
 zone: a.willowdesk.info
 # Location of your EC2 Key Pair:
 ssh_private_key: ~/.ec2/codefordurham.pem
+# Admin users that can work with dokku, and login to the server:
+users:
+  - name: dsummers
+    public_keys:
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbLiRabIT10uLxy0u8ENoieqoup+tErtlK3KHJi2GdhWKcF7MkAdO5icQ9SrsaCH8Yo7hjQKXM+01gzncWF4KII/d/B9x6i9mTHKl2zLgHxogbeXL5phL6FO5uegsCRNuYioqAu/qHticAavRw4OKBHgbTM75oivysUBY11p1T5EWjSJjqsVYdDXYKCORryhjnhPKcPqaWVNq/XsDCqnMpMsHf8S0cfCOxeYhVvc47H+xRn7na6g/bjNIxJZIOz7qTmcpDik4F1N3rvpIzPqQREdlSLPAXtnLF25mWZuf7f8RfR4ej6r7MzFaJE8LZ/b/nOMjh538NsAegcIpcehRp dsummers@pinedesk.biz"

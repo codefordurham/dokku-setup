@@ -17,8 +17,8 @@ ansible-galaxy install -r requirements.yml
 NOTE: you will also need the vault password for some passwords stored in
 ansible. Ask another developer for it.
 
-Deployment
-----------
+Setup
+-----
 
 Run the setup.yml ansible script and setup docker-machine to point to the new
 EC2 instance:
@@ -29,51 +29,33 @@ ansible-playbook setup.yml
 
 Note: When cloudformation sets up your server the first time it will used the 'ubuntu' user to connect to the server. Afterward, your admin users will have accounts, you should run this script with one of those user names.
 
-Setup
------
+You can modify the variables in `var/aws.yml` to access to the server, its
+stack, and hostname.
 
-[Install ansible](http://docs.ansible.com/ansible/intro_installation.html), and
-install [ansible galaxy](https://galaxy.ansible.com/) dependencies:
-
-```bash
-sudo ansible-galaxy install -r requirements.yml
-```
-
-Create your `vars/aws_secrets.yml` file with your AWS credentials needed to create AWS resources:
-
-```
-rm vars/aws_secrets.yml
-ansible-vault edit vars/aws_secrets.yml
-```
-
-The file should look like:
-
-```
----
-# credentials used to create the server and network:
-cloudformation_access_key: YOURKEY
-cloudformation_secret_key: YOURSECRET
-
-# credentials used to setup DNS:
-route53_access_key: YOURKEY
-route53_secret_key: YOURSECRET
-```
-
-Modify the script settings in `vars/aws.yml` to match your particular
-configuration.
+When you run the playbook for an instance that already exists you will need to
+supply a username that is configured to administer the server (`ansible-playbook
+-u ADMINUSER setup.yml`), as the ubuntu account will not be accessible after the
+initial setup.
 
 Teardown
 --------
 
-To remove all the resources execute the teardown script:
+To remove the server and all the resources execute the teardown script:
 
 ```
 ansible-playbook teardown.yml
-
-# remove the docker-machine setting:
-docker-machine rm ...
 ```
 
-Note that this will not remove any DNS entries created by applications you
-deployed (apart from the one created for the EC2 server itself). You will need
-to manually remove those from Route53.
+Dokku
+-----
+
+Once your dokku server is running, you can deploy apps to it. For example:
+
+```
+ssh ADMINUSER@DOKKU_HOST dokku apps:create python-sample
+
+git clone https://github.com/heroku/python-sample.git
+cd python-sample
+git remote add dokku dokku@DOKKU_HOST:python-sample
+git push dokku master
+```
