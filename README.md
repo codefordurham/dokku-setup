@@ -25,10 +25,9 @@ EC2 instance:
 
 ```
 ansible-playbook setup.yml
-
-# If your AWS profile is not default, use:
-# AWS_PROFILE=YOURAWSPROFILE ansible-playbook setup.yml
 ```
+
+Note: When cloudformation sets up your server the first time it will used the 'ubuntu' user to connect to the server. Afterward, your admin users will have accounts, you should run this script with one of those user names.
 
 Setup
 -----
@@ -40,8 +39,7 @@ install [ansible galaxy](https://galaxy.ansible.com/) dependencies:
 sudo ansible-galaxy install -r requirements.yml
 ```
 
-Create your `vars/aws_secrets.yml` file with your AWS credentials needed to
-create Route53 entries:
+Create your `vars/aws_secrets.yml` file with your AWS credentials needed to create AWS resources:
 
 ```
 rm vars/aws_secrets.yml
@@ -52,8 +50,13 @@ The file should look like:
 
 ```
 ---
-aws_access_key: YOURKEY
-aws_secret_key: YOURSECRET
+# credentials used to create the server and network:
+cloudformation_access_key: YOURKEY
+cloudformation_secret_key: YOURSECRET
+
+# credentials used to setup DNS:
+route53_access_key: YOURKEY
+route53_secret_key: YOURSECRET
 ```
 
 Modify the script settings in `vars/aws.yml` to match your particular

@@ -9,51 +9,53 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
-    - name: fetch cloudformation template.
-      get_url:
-        url: https://s3.amazonaws.com/dokku-aws/dokku_stack.json
-        dest: files/cf_template.json
+    - name: generate cloudformation template.
+      shell: python scripts/make_cf_template.py > files/cf_template.json
     - name: Launch cloudformation to create ec2, security group, and EIP.
       cloudformation:
+        aws_access_key: "{{ cloudformation_access_key }}"
+        aws_secret_key: "{{ cloudformation_secret_key }}"
         stack_name: "{{ stack_name }}"
         state: present
         region: "{{ aws_region }}"
         template: files/cf_template.json
         template_parameters:
-          DokkuHostname: "{{ stack_name }}.{{ zone }}"
           KeyName: "{{ key_name }}"
-          SshCidr: "{{ ipify_public_ip }}/32"
+          Name: "{{ stack_name }}"
+          SSHLocation: "{{ ipify_public_ip }}/32"
       register: cloudformation
     - name: "Setup route53 {{ stack_name }}.{{ zone }}"
       route53:
-        profile: "{{ aws_dns_profile }}"
+        aws_access_key: "{{ route53_access_key }}"
+        aws_secret_key: "{{ route53_secret_key }}"
         command: create
         overwrite: true
         zone: "{{ zone }}"
         record: "{{ stack_name }}.{{ zone }}"
         type: A
-        value: "{{ cloudformation.stack_outputs.PublicIP }}"
+        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
     - name: Wildcard subdomains for stack
       route53:
-        profile: "{{ aws_dns_profile }}"
+        aws_access_key: "{{ route53_access_key }}"
+        aws_secret_key: "{{ route53_secret_key }}"
         command: create
         overwrite: true
         zone: "{{ zone }}"
         record: "*.{{ stack_name }}.{{ zone }}"
         type: A
-        value: "{{ cloudformation.stack_outputs.PublicIP }}"
+        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
     - name: Add instance to in-memory host group
       add_host:
-        hostname: "{{ cloudformation.stack_outputs.PublicIP }}"
+        hostname: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
         groups: cloud_formation
     - name: Wait for SSH
       wait_for:
-        host: "{{ cloudformation.stack_outputs.PublicIP }}"
+        host: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
         port: 22
         delay: 5
         timeout: 300
         state: started
-- name: Configure ec2 instance
+- name: Setup ansible dependencies
   hosts: cloud_formation
   become: yes
   gather_facts: False
@@ -67,6 +69,20 @@
   # if there is no python, install it before using other ansible packages
   - name: setup python symlink for ansible
     raw: which python || ln -s `which python3` /usr/bin/python
+- name: Configure ec2 instance
+  hosts: cloud_formation
+  become: yes
+  gather_facts: True
+  vars_files:
+    - vars/aws.yml
+    - vars/aws_secrets.yml
+  vars:
+    ansible_ssh_private_key_file: "{{ ssh_private_key }}"
+    ansible_host_key_checking: false
+    users:
+      - name: dsummers
+        public_keys:
+        - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbLiRabIT10uLxy0u8ENoieqoup+tErtlK3KHJi2GdhWKcF7MkAdO5icQ9SrsaCH8Yo7hjQKXM+01gzncWF4KII/d/B9x6i9mTHKl2zLgHxogbeXL5phL6FO5uegsCRNuYioqAu/qHticAavRw4OKBHgbTM75oivysUBY11p1T5EWjSJjqsVYdDXYKCORryhjnhPKcPqaWVNq/XsDCqnMpMsHf8S0cfCOxeYhVvc47H+xRn7na6g/bjNIxJZIOz7qTmcpDik4F1N3rvpIzPqQREdlSLPAXtnLF25mWZuf7f8RfR4ej6r7MzFaJE8LZ/b/nOMjh538NsAegcIpcehRp dsummers@pinedesk.biz"
   roles:
   - role: swapfile
     swapfile_size: 3GB
@@ -76,17 +92,15 @@
     # tequila docs.
     env_name: no_env_set
     project_name: dokku-stack
-    users:
-      - name: dsummers
-        public_keys:
-        - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbLiRabIT10uLxy0u8ENoieqoup+tErtlK3KHJi2GdhWKcF7MkAdO5icQ9SrsaCH8Yo7hjQKXM+01gzncWF4KII/d/B9x6i9mTHKl2zLgHxogbeXL5phL6FO5uegsCRNuYioqAu/qHticAavRw4OKBHgbTM75oivysUBY11p1T5EWjSJjqsVYdDXYKCORryhjnhPKcPqaWVNq/XsDCqnMpMsHf8S0cfCOxeYhVvc47H+xRn7na6g/bjNIxJZIOz7qTmcpDik4F1N3rvpIzPqQREdlSLPAXtnLF25mWZuf7f8RfR4ej6r7MzFaJE8LZ/b/nOMjh538NsAegcIpcehRp dsummers@pinedesk.biz"
+  - role: tequila-dokku
+    dokku_hostname: "{{ stack_name }}.{{ zone }}"
   tasks:
-  - name: Install Letsencrypt
-    shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
-    args:
-      creates: /var/lib/dokku/plugins/enabled/letsencrypt
   - name: Ensure dokku allows SSH access
     user:
       name: dokku
       groups: login
       append: true
+  - name: Install Letsencrypt
+    shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+    args:
+      creates: /var/lib/dokku/plugins/enabled/letsencrypt

@@ -8,32 +8,45 @@
   tasks:
     - name: get admin's public ip address
       ipify_facts:
-    - name: fetch cloudformation template.
-      get_url:
-        url: https://s3.amazonaws.com/dokku-aws/dokku_stack.json
-        dest: files/cf_template.json
+    - name: generate cloudformation template.
+      shell: python scripts/make_cf_template.py > files/cf_template.json
     - name: Ensure cloudformation is up
       cloudformation:
+        aws_access_key: "{{ cloudformation_access_key }}"
+        aws_secret_key: "{{ cloudformation_secret_key }}"
         stack_name: "{{ stack_name }}"
         state: present
         region: "{{ aws_region }}"
         template: files/cf_template.json
         template_parameters:
-          DokkuHostname: "{{ stack_name }}.{{ zone }}"
           KeyName: "{{ key_name }}"
-          SshCidr: "{{ ipify_public_ip }}/32"
+          Name: "{{ stack_name }}"
+          SSHLocation: "{{ ipify_public_ip }}/32"
       register: cloudformation
     - name: "Remove {{ stack_name }} stack"
       route53:
-        profile: "{{ aws_dns_profile }}"
+        aws_access_key: "{{ route53_access_key }}"
+        aws_secret_key: "{{ route53_secret_key }}"
         command: delete
         overwrite: true
         zone: "{{ zone }}"
         record: "{{ stack_name }}.{{ zone }}"
         type: A
-        value: "{{ cloudformation.stack_outputs.PublicIP }}"
+        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
+    - name: Remove wildcard subdomains for stack
+      route53:
+        aws_access_key: "{{ route53_access_key }}"
+        aws_secret_key: "{{ route53_secret_key }}"
+        command: delete
+        overwrite: true
+        zone: "{{ zone }}"
+        record: "*.{{ stack_name }}.{{ zone }}"
+        type: A
+        value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
     - name: Destroy cloudformation to create ec2, security group, and EIP.
       cloudformation:
+        aws_access_key: "{{ cloudformation_access_key }}"
+        aws_secret_key: "{{ cloudformation_secret_key }}"
         stack_name: "{{ stack_name }}"
         state: absent
         region: "{{ aws_region }}"

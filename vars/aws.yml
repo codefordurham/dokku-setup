@@ -8,5 +8,3 @@ key_name: codefordurham
 zone: a.willowdesk.info
 # Location of your EC2 Key Pair:
 ssh_private_key: ~/.ec2/codefordurham.pem
-# The AWS profile where Route53 DNS is controlled (if a different account):
-aws_dns_profile: default
