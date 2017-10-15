@@ -14,11 +14,15 @@ pip install -r requirements.txt
 ansible-galaxy install -r requirements.yml
 ```
 
-NOTE: you will also need the vault password for some passwords stored in
-ansible. Ask another developer for it.
-
 Setup
 -----
+
+Pre-requisites:
+
+ * An EC2 Keypair: create one from the AWS console, and add it to vars/aws.yml
+   -- share this with other developers that can setup dokku.
+ * You will also need the vault password for some passwords stored in ansible.
+   Ask another developer for it.
 
 Run the setup.yml ansible script and setup docker-machine to point to the new
 EC2 instance:
@@ -27,7 +31,9 @@ EC2 instance:
 ansible-playbook setup.yml
 ```
 
-Note: When cloudformation sets up your server the first time it will used the 'ubuntu' user to connect to the server. Afterward, your admin users will have accounts, you should run this script with one of those user names.
+Note: When cloudformation sets up your server the first time it will used the
+'ubuntu' user to connect to the server. Afterward, your admin users will have
+accounts, you should run this script with one of those user names.
 
 You can modify the variables in `var/aws.yml` to access to the server, its
 stack, and hostname.
