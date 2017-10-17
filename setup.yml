@@ -24,24 +24,24 @@
           Name: "{{ stack_name }}"
           SSHLocation: "{{ ipify_public_ip }}/32"
       register: cloudformation
-    - name: "Setup route53 {{ stack_name }}.{{ zone }}"
+    - name: "Setup route53 {{ dokku_host }}"
       route53:
         aws_access_key: "{{ route53_access_key }}"
         aws_secret_key: "{{ route53_secret_key }}"
         command: create
         overwrite: true
         zone: "{{ zone }}"
-        record: "{{ stack_name }}.{{ zone }}"
+        record: "{{ dokku_host }}"
         type: A
         value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
-    - name: Wildcard subdomains for stack
+    - name: Wildcard subdomains for stack {{ wildcard_host }}
       route53:
         aws_access_key: "{{ route53_access_key }}"
         aws_secret_key: "{{ route53_secret_key }}"
         command: create
         overwrite: true
         zone: "{{ zone }}"
-        record: "*.{{ stack_name }}.{{ zone }}"
+        record: "{{ wildcard_host }}"
         type: A
         value: "{{ cloudformation.stack_outputs.InstanceIPAddress }}"
     - name: Add instance to in-memory host group
@@ -89,7 +89,7 @@
     env_name: no_env_set
     project_name: dokku-stack
   - role: tequila-dokku
-    dokku_hostname: "{{ stack_name }}.{{ zone }}"
+    dokku_hostname: "{{ zone }}"
   tasks:
   - name: Install Letsencrypt
     shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
