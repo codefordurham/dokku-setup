@@ -84,8 +84,6 @@
     swapfile_size: 3GB
     swapfile_swappiness: 10
   - role: tequila-common
-    # TODO should make a PR to add this requirement for 'env_name' to the
-    # tequila docs.
     env_name: no_env_set
     project_name: dokku-stack
   - role: tequila-dokku
