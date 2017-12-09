@@ -22,7 +22,7 @@
         template_parameters:
           KeyName: "{{ key_name }}"
           Name: "{{ stack_name }}"
-          SSHLocation: "{{ ipify_public_ip }}/32"
+          SSHLocation: "0.0.0.0/0"
       register: cloudformation
     - name: "Setup route53 {{ dokku_host }}"
       route53:
