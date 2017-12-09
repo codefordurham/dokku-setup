@@ -52,6 +52,19 @@ To remove the server and all the resources execute the teardown script:
 ansible-playbook teardown.yml
 ```
 
+Plugins
+-------
+
+Plugins in use:
+
+```
+ssh copelco@cfd sudo dokku plugin:install https://github.com/michaelshobbs/dokku-logspout.git
+ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
+ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-redis.git redis
+ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-redirect.git
+```
+
 Dokku
 -----
 
