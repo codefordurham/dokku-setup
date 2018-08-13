@@ -8,7 +8,7 @@ Setup
 -----
 
 ```
-mkvirtualenv -p `which python2` dokku-setup
+mkvirtualenv -p `which python3` dokku-setup
 
 pip install -r requirements.txt
 ansible-galaxy install -r requirements.yml
@@ -34,6 +34,10 @@ ansible-playbook setup.yml
 Note: When cloudformation sets up your server the first time it will used the
 'ubuntu' user to connect to the server. Afterward, your admin users will have
 accounts, you should run this script with one of those user names.
+
+```
+ansible-playbook -u USERNAME_IN_AWS_YML setup.yml
+```
 
 You can modify the variables in `var/aws.yml` to access to the server, its
 stack, and hostname.

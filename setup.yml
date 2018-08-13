@@ -7,8 +7,6 @@
     - vars/aws.yml
     - vars/aws_secrets.yml
   tasks:
-    - name: get admin's public ip address
-      ipify_facts:
     - name: generate cloudformation template.
       shell: python scripts/make_cf_template.py > files/cf_template.json
     - name: Launch cloudformation to create ec2, security group, and EIP.
@@ -89,7 +87,14 @@
   - role: tequila-dokku
     dokku_hostname: "{{ zone }}"
   tasks:
-  - name: Install Letsencrypt
-    shell: dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
+  - name: Install Dokku plugins
+    shell: "dokku plugin:install {{ item.url }}"
     args:
-      creates: /var/lib/dokku/plugins/enabled/letsencrypt
+      creates: "/var/lib/dokku/plugins/enabled/{{ item.name }}"
+    loop:
+      - { name: "letsencrypt", url: "https://github.com/dokku/dokku-letsencrypt.git" }
+      - { name: "logspout", url: "https://github.com/michaelshobbs/dokku-logspout.git" }
+      - { name: "postgres", url: "https://github.com/dokku/dokku-postgres.git" }
+      - { name: "redis", url: "https://github.com/dokku/dokku-redis.git" }
+      - { name: "redirect", url: "https://github.com/dokku/dokku-redirect.git" }
+      - { name: "dockerfile", url: "https://github.com/mimischi/dokku-dockerfile.git" }
