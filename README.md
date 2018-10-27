@@ -59,15 +59,14 @@ ansible-playbook teardown.yml
 Plugins
 -------
 
-Plugins in use:
+There are several that you can take advantage of, see setup.yml for the complete
+list:
 
-```
-ssh copelco@cfd sudo dokku plugin:install https://github.com/michaelshobbs/dokku-logspout.git
-ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
-ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
-ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-redis.git redis
-ssh copelco@cfd sudo dokku plugin:install https://github.com/dokku/dokku-redirect.git
-```
+ * databases: postgres and redis.
+ * docker: dockerfile (for non-root dockerfiles)
+ * letsencrypt: https
+ * redirect: setup simple HTTP redirects.
+ * logspout: log file routing.
 
 Dokku
 -----
