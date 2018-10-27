@@ -62,7 +62,7 @@ Plugins
 There are several that you can take advantage of, see setup.yml for the complete
 list:
 
- * databases: postgres and redis.
+ * databases: postgres, mysql, redis.
  * docker: dockerfile (for non-root dockerfiles)
  * letsencrypt: https
  * redirect: setup simple HTTP redirects.
