@@ -95,6 +95,7 @@
       - { name: "letsencrypt", url: "https://github.com/dokku/dokku-letsencrypt.git" }
       - { name: "logspout", url: "https://github.com/michaelshobbs/dokku-logspout.git" }
       - { name: "postgres", url: "https://github.com/dokku/dokku-postgres.git" }
+      - { name: "mysql", url: "https://github.com/dokku/dokku-mysql.git" }
       - { name: "redis", url: "https://github.com/dokku/dokku-redis.git" }
       - { name: "redirect", url: "https://github.com/dokku/dokku-redirect.git" }
       - { name: "dockerfile", url: "https://github.com/mimischi/dokku-dockerfile.git" }
